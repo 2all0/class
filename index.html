@@ -33,12 +33,12 @@
             padding: 2.5rem;
             text-align: center;
             border: 1px solid #f1f5f9;
-            margin: 2rem auto;
+            margin: 1rem auto;
         }
         .visual-timer-container {
             position: relative;
-            width: 260px;
-            height: 260px;
+            width: 240px;
+            height: 240px;
             margin: 0 auto 1.5rem;
         }
         .digital-font { font-family: 'JetBrains Mono', monospace; }
@@ -89,33 +89,49 @@
             font-weight: bold;
         }
 
-        /* 3. 모둠별 체크판 스타일 */
+        /* 3. 모둠별 체크판 스타일 (A4 최적화) */
+        .group-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3열 고정 */
+            gap: 15px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .group-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         .group-card {
             border: 2px solid #333;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
             background: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
         .group-header {
             border-bottom: 2px solid #333;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 800;
+            font-size: 1.1rem;
             background-color: #fff;
         }
         .group-student-btn {
             width: 100%;
-            height: 55px;
-            border-bottom: 1px solid #333;
+            height: 50px; /* 높이 소폭 축소 */
+            border-bottom: 1px solid #444;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             position: relative;
+            transition: all 0.1s;
         }
         .group-student-btn:last-child { border-bottom: none; }
-        .group-student-btn.completed { background-color: #e2e8f0 !important; color: transparent; }
+        .group-student-btn.completed { background-color: #f1f5f9 !important; color: transparent; }
         .group-student-btn.completed::after {
             content: '○';
             position: absolute;
@@ -123,18 +139,29 @@
             font-size: 2.2rem;
             font-weight: bold;
         }
-        .bg-g1 { background-color: #f3d0d0; }
-        .bg-g2 { background-color: #ffc996; }
-        .bg-g3 { background-color: #fff9c4; }
-        .bg-g4 { background-color: #d1f2e1; }
-        .bg-g5 { background-color: #c5d3ee; }
-        .bg-g6 { background-color: #d1c4e9; }
+        
+        .bg-g1 { background-color: #ffe4e4; }
+        .bg-g2 { background-color: #fff0db; }
+        .bg-g3 { background-color: #ffffd1; }
+        .bg-g4 { background-color: #e6ffed; }
+        .bg-g5 { background-color: #e8f0ff; }
+        .bg-g6 { background-color: #f3ebff; }
+
+        /* 인쇄 최적화 */
+        @media print {
+            nav { display: none !important; }
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .page-transition { transform: none !important; animation: none !important; }
+            .group-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 10px; }
+            .group-card { border-width: 1px; page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
 
     <!-- 내비게이션 바 -->
-    <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
+    <nav class="bg-white border-b sticky top-0 z-50 shadow-sm no-print">
         <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
             <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
                 <span class="text-2xl">🏫</span>
@@ -148,29 +175,29 @@
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-4 md:p-8">
+    <main class="max-w-6xl mx-auto p-4 md:p-6">
         
-        <!-- [메인 홈 화면] -->
+        <!-- [홈 화면] -->
         <div id="page-home" class="page-transition">
-            <div class="text-center py-12">
-                <h1 class="text-4xl font-black text-slate-800 mb-4">반갑습니다! 👋</h1>
-                <p class="text-slate-500 mb-12">오늘 수업에 필요한 도구를 선택해 보세요.</p>
+            <div class="text-center py-10">
+                <h1 class="text-4xl font-black text-slate-800 mb-2">반갑습니다! 👋</h1>
+                <p class="text-slate-500 mb-10">오늘 수업에 필요한 도구를 선택해 보세요.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div onclick="showPage('timer')" class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all cursor-pointer border-b-8 border-red-400 group">
+                    <div onclick="showPage('timer')" class="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all cursor-pointer border-b-8 border-red-400 group">
                         <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">⏱️</div>
                         <h2 class="text-2xl font-bold mb-2">집중 타이머</h2>
-                        <p class="text-slate-500">뽀모도로 기법으로<br>수업 집중도를 높여요.</p>
+                        <p class="text-slate-500 text-sm">뽀모도로 기법으로 수업 집중!</p>
                     </div>
-                    <div onclick="showPage('checklist')" class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all cursor-pointer border-b-8 border-green-400 group">
+                    <div onclick="showPage('checklist')" class="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all cursor-pointer border-b-8 border-green-400 group">
                         <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📝</div>
-                        <h2 class="text-2xl font-bold mb-2">개인 체크리스트</h2>
-                        <p class="text-slate-500">전체 학생의 과제 제출<br>현황을 한눈에 확인해요.</p>
+                        <h2 class="text-2xl font-bold mb-2">전체 명렬표</h2>
+                        <p class="text-slate-500 text-sm">개인별 과제 제출 현황 확인</p>
                     </div>
-                    <div onclick="showPage('group')" class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all cursor-pointer border-b-8 border-blue-400 group">
+                    <div onclick="showPage('group')" class="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all cursor-pointer border-b-8 border-blue-400 group">
                         <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">👥</div>
                         <h2 class="text-2xl font-bold mb-2">모둠별 체크판</h2>
-                        <p class="text-slate-500">모둠 활동 현황을<br>색상별로 구분해 관리해요.</p>
+                        <p class="text-slate-500 text-sm">한 눈에 들어오는 모둠 활동</p>
                     </div>
                 </div>
             </div>
@@ -201,38 +228,41 @@
                         <span class="text-gray-400">s</span>
                     </div>
                 </div>
-                <div class="flex gap-3">
-                    <button id="timer-start" class="flex-1 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform">시작하기</button>
+                <div class="flex gap-3 no-print">
+                    <button id="timer-start" class="flex-1 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform">시작</button>
                     <button id="timer-reset" class="px-6 bg-gray-100 text-gray-500 font-bold py-4 rounded-2xl active:scale-95 transition-transform">초기화</button>
                 </div>
-                <button id="timer-alarm-stop" class="hidden w-full mt-3 bg-red-500 text-white font-black py-5 rounded-2xl animate-bounce">🔔 알람 종료</button>
+                <button id="timer-alarm-stop" class="hidden w-full mt-3 bg-red-500 text-white font-black py-5 rounded-2xl animate-pulse no-print">🔔 알람 종료</button>
             </div>
         </div>
 
-        <!-- [2. 체크리스트 화면] -->
+        <!-- [2. 명렬표 화면] -->
         <div id="page-checklist" class="page-transition hidden">
-            <div class="max-w-xl mx-auto bg-white p-6 rounded-3xl shadow-lg border-2 border-pink-100">
+            <div class="max-w-xl mx-auto bg-white p-6 rounded-3xl shadow-lg border border-slate-200">
                 <div class="flex items-center gap-4 mb-6">
-                    <span class="text-3xl">⭐</span>
-                    <input type="text" class="flex-1 p-4 bg-pink-50 rounded-2xl border-none outline-none font-bold text-lg text-center" placeholder="과제 내용을 입력하세요">
+                    <span class="text-3xl no-print">⭐</span>
+                    <input type="text" class="flex-1 p-3 bg-slate-50 rounded-xl border border-slate-100 outline-none font-bold text-lg text-center" placeholder="과제 내용을 입력하세요">
+                    <button onclick="resetChecklist()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold text-sm no-print">초기화</button>
                 </div>
                 <div class="grid-container" id="checklist-grid"></div>
-                <div class="text-center mt-6">
-                    <button onclick="resetChecklist()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold">모두 초기화</button>
-                </div>
             </div>
         </div>
 
-        <!-- [3. 모둠별 체크판 화면] -->
+        <!-- [3. 모둠별 체크판 화면 (A4 1장 최적화)] -->
         <div id="page-group" class="page-transition hidden">
-            <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-blue-100 mb-8">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6 no-print">
                 <div class="flex flex-col sm:flex-row gap-4 items-center">
                     <span class="font-bold text-blue-800 whitespace-nowrap">오늘의 과제:</span>
-                    <input type="text" id="group-task-name" placeholder="과제 내용을 입력하세요" class="w-full p-3 border-b-2 border-blue-200 outline-none focus:border-blue-500 text-lg">
-                    <button onclick="resetGroupAll()" class="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold whitespace-nowrap">모두 초기화</button>
+                    <input type="text" id="group-task-name" placeholder="여기에 과제 내용을 입력하세요" class="w-full p-2 border-b-2 border-blue-100 outline-none focus:border-blue-500 text-lg font-bold">
+                    <div class="flex gap-2">
+                        <button onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold whitespace-nowrap hover:bg-blue-700">인쇄</button>
+                        <button onclick="resetGroupAll()" class="bg-slate-800 text-white px-5 py-2 rounded-xl font-bold whitespace-nowrap">초기화</button>
+                    </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="group-grid-container">
+
+            <!-- 모둠 그리드 (2행 3열 구성) -->
+            <div class="group-grid" id="group-grid-container">
                 <!-- JS에서 생성됨 -->
             </div>
         </div>
@@ -240,13 +270,10 @@
     </main>
 
     <script>
-        // --- 페이지 전환 로직 ---
+        // --- 페이지 전환 ---
         function showPage(pageId) {
-            // 모든 페이지 숨기기
             document.querySelectorAll('.page-transition').forEach(page => page.classList.add('hidden'));
-            // 선택한 페이지 보이기
             document.getElementById('page-' + pageId).classList.remove('hidden');
-            // 스크롤 맨 위로
             window.scrollTo(0, 0);
         }
 
@@ -270,9 +297,6 @@
             const min = Math.floor(timeLeft / 60), sec = timeLeft % 60;
             tDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
             updateTimerVisual(timeLeft / (totalSeconds || 1));
-            const status = document.getElementById('timer-status');
-            if (timeLeft <= 10 && isRunning) { tDisplay.style.color = '#ef4444'; status.textContent = "곧 종료됩니다!"; }
-            else { tDisplay.style.color = ''; status.innerHTML = "&nbsp;"; }
         }
 
         function playMelody() {
@@ -281,7 +305,7 @@
             [392, 523, 659, 783].forEach((f, i) => {
                 const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
                 osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + i * 0.12);
-                g.gain.setValueAtTime(0.05, now + i * 0.12);
+                g.gain.setValueAtTime(0.04, now + i * 0.12);
                 g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.4);
                 osc.connect(g); g.connect(audioCtx.destination);
                 osc.start(now + i * 0.12); osc.stop(now + i * 0.12 + 0.5);
@@ -315,7 +339,7 @@
             const m = parseInt(document.getElementById('input-min').value) || 0;
             const s = parseInt(document.getElementById('input-sec').value) || 0;
             totalSeconds = timeLeft = m * 60 + s;
-            document.getElementById('timer-start').textContent = '시작하기';
+            document.getElementById('timer-start').textContent = '시작';
             updateTimerDisplay();
         };
 
@@ -326,7 +350,7 @@
             document.getElementById('timer-reset').click();
         };
 
-        // --- 2. 체크리스트 로직 ---
+        // --- 2. 명렬표 로직 ---
         const students = ["강태영", "김재아", "김지아", "김지유", "김지한", "김채령", "남현우", "문유찬", "박지호", "서예림", "신현진", "여승우", "이루안", "이서아", "이예은", "이정우", "이채연", "임수현", "정아율", "제갈선율", "최서준", "최아윤", "한수아", "", ""];
         
         function initChecklist() {
@@ -335,14 +359,14 @@
             students.forEach((name, i) => {
                 const cell = document.createElement('div');
                 cell.className = 'student-cell';
-                cell.innerHTML = `<span class="text-xs text-slate-400 mb-1">${i+1}</span><span class="name-label font-bold text-sm">${name}</span>`;
+                cell.innerHTML = `<span class="text-[10px] text-slate-400 mb-1">${i+1}</span><span class="name-label font-bold text-sm">${name}</span>`;
                 if(name !== "") cell.onclick = () => cell.classList.toggle('checked');
                 grid.appendChild(cell);
             });
         }
         function resetChecklist() { document.querySelectorAll('.student-cell').forEach(c => c.classList.remove('checked')); }
 
-        // --- 3. 모둠별 체크판 로직 ---
+        // --- 3. 모둠별 체크판 로직 (3열 그리드 생성) ---
         const groupData = [
             { id: 1, name: "1모둠", color: "bg-g1", members: ["태영", "재아", "지아", "지유"] },
             { id: 2, name: "2모둠", color: "bg-g2", members: ["지한", "채령", "현우", "유찬"] },
@@ -360,7 +384,7 @@
                 card.className = 'group-card';
                 let memberHtml = group.members.map(m => 
                     m ? `<div class="group-student-btn ${group.color}" onclick="this.classList.toggle('completed')">${m}</div>` 
-                      : `<div class="h-[55px] ${group.color} opacity-30"></div>`
+                      : `<div class="h-[50px] ${group.color} opacity-20"></div>`
                 ).join('');
                 card.innerHTML = `<div class="group-header">${group.name}</div>${memberHtml}`;
                 container.appendChild(card);
@@ -373,7 +397,6 @@
             }
         }
 
-        // 초기화 실행
         window.onload = () => {
             initChecklist();
             initGroupBoard();
