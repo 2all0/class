@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학급 통합 도구함</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Pretendard:wght@400;600;800&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* 공통 애니메이션 */
+        .page-transition {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 1. 타이머 스타일 */
+        .timer-card {
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            border-radius: 48px;
+            width: 95%;
+            max-width: 420px;
+            padding: 2.5rem;
+            text-align: center;
+            border: 1px solid #f1f5f9;
+            margin: 2rem auto;
+        }
+        .visual-timer-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 1.5rem;
+        }
+        .digital-font { font-family: 'JetBrains Mono', monospace; }
+        .timer-svg { transform: rotate(-90deg); }
+        .timer-progress { fill: #ff4d4d; transition: d 0.2s linear; }
+        .timer-center-knob { fill: white; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+        .pulse-warning { animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .alarm-active { animation: shake 0.5s infinite; background-color: #fff1f1 !important; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        /* 2. 체크리스트 스타일 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            background-color: #333;
+            border: 2px solid #333;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .student-cell {
+            background-color: white;
+            aspect-ratio: 1 / 1.1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px;
+            transition: background-color 0.2s;
+        }
+        .student-cell:nth-child(even) { background-color: #f8f8f8; }
+        .student-cell.checked { background-color: #cbd5e1 !important; }
+        .student-cell.checked .name-label { display: none; }
+        .student-cell.checked::after {
+            content: '○';
+            font-size: 2rem;
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        /* 3. 모둠별 체크판 스타일 */
+        .group-card {
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+        .group-header {
+            border-bottom: 2px solid #333;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            background-color: #fff;
+        }
+        .group-student-btn {
+            width: 100%;
+            height: 55px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+        .group-student-btn:last-child { border-bottom: none; }
+        .group-student-btn.completed { background-color: #e2e8f0 !important; color: transparent; }
+        .group-student-btn.completed::after {
+            content: '○';
+            position: absolute;
+            color: #ef4444;
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+        .bg-g1 { background-color: #f3d0d0; }
+        .bg-g2 { background-color: #ffc996; }
+        .bg-g3 { background-color: #fff9c4; }
+        .bg-g4 { background-color: #d1f2e1; }
+        .bg-g5 { background-color: #c5d3ee; }
+        .bg-g6 { background-color: #d1c4e9; }
+    </style>
+</head>
+<body>
+
+    <!-- 내비게이션 바 -->
+    <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
+                <span class="text-2xl">🏫</span>
+                <span class="font-black text-xl text-slate-800 hidden sm:block">학급 도구함</span>
+            </div>
+            <div class="flex gap-1 sm:gap-4">
+                <button onclick="showPage('timer')" class="px-3 py-2 rounded-lg hover:bg-slate-100 font-bold text-slate-600 transition-colors">⏱️ 타이머</button>
+                <button onclick="showPage('checklist')" class="px-3 py-2 rounded-lg hover:bg-slate-100 font-bold text-slate-600 transition-colors">📝 명렬표</button>
+                <button onclick="showPage('group')" class="px-3 py-2 rounded-lg hover:bg-slate-100 font-bold text-slate-600 transition-colors">👥 모둠별</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-8">
+        
+        <!-- [메인 홈 화면] -->
+        <div id="page-home" class="page-transition">
+            <div class="text-center py-12">
+                <h1 class="text-4xl font-black text-slate-800 mb-4">반갑습니다! 👋</h1>
+                <p class="text-slate-500 mb-12">오늘 수업에 필요한 도구를 선택해 보세요.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="showPage('timer')" class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all cursor-pointer border-b-8 border-red-400 group">
+                        <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">⏱️</div>
+                        <h2 class="text-2xl font-bold mb-2">집중 타이머</h2>
+                        <p class="text-slate-500">뽀모도로 기법으로<br>수업 집중도를 높여요.</p>
+                    </div>
+                    <div onclick="showPage('checklist')" class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all cursor-pointer border-b-8 border-green-400 group">
+                        <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📝</div>
+                        <h2 class="text-2xl font-bold mb-2">개인 체크리스트</h2>
+                        <p class="text-slate-500">전체 학생의 과제 제출<br>현황을 한눈에 확인해요.</p>
+                    </div>
+                    <div onclick="showPage('group')" class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all cursor-pointer border-b-8 border-blue-400 group">
+                        <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">👥</div>
+                        <h2 class="text-2xl font-bold mb-2">모둠별 체크판</h2>
+                        <p class="text-slate-500">모둠 활동 현황을<br>색상별로 구분해 관리해요.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- [1. 타이머 화면] -->
+        <div id="page-timer" class="page-transition hidden">
+            <div class="timer-card mx-auto">
+                <div id="digital-header" class="mb-6 py-2 bg-gray-50 rounded-2xl border border-gray-100">
+                    <span id="timer-display" class="digital-font text-5xl font-bold text-gray-800">25:00</span>
+                </div>
+                <div class="visual-timer-container">
+                    <svg viewBox="0 0 100 100" class="timer-svg w-full h-full">
+                        <circle cx="50" cy="50" r="48" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="0.5" />
+                        <path id="timer-path" class="timer-progress" d="M 50 50 L 50 2 A 48 48 0 1 1 50 2 Z" />
+                        <circle cx="50" cy="50" r="10" class="timer-center-knob" />
+                        <circle cx="50" cy="50" r="1.5" fill="#cbd5e1" />
+                    </svg>
+                </div>
+                <p id="timer-status" class="text-xs font-bold text-gray-400 mb-6 h-4">&nbsp;</p>
+                <div class="flex justify-center items-center gap-4 mb-8">
+                    <div class="bg-slate-50 px-4 py-2 rounded-2xl border flex items-center gap-1">
+                        <input type="number" id="input-min" value="25" class="w-10 bg-transparent text-center font-bold outline-none">
+                        <span class="text-gray-400">m</span>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-2 rounded-2xl border flex items-center gap-1">
+                        <input type="number" id="input-sec" value="0" class="w-10 bg-transparent text-center font-bold outline-none">
+                        <span class="text-gray-400">s</span>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button id="timer-start" class="flex-1 bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform">시작하기</button>
+                    <button id="timer-reset" class="px-6 bg-gray-100 text-gray-500 font-bold py-4 rounded-2xl active:scale-95 transition-transform">초기화</button>
+                </div>
+                <button id="timer-alarm-stop" class="hidden w-full mt-3 bg-red-500 text-white font-black py-5 rounded-2xl animate-bounce">🔔 알람 종료</button>
+            </div>
+        </div>
+
+        <!-- [2. 체크리스트 화면] -->
+        <div id="page-checklist" class="page-transition hidden">
+            <div class="max-w-xl mx-auto bg-white p-6 rounded-3xl shadow-lg border-2 border-pink-100">
+                <div class="flex items-center gap-4 mb-6">
+                    <span class="text-3xl">⭐</span>
+                    <input type="text" class="flex-1 p-4 bg-pink-50 rounded-2xl border-none outline-none font-bold text-lg text-center" placeholder="과제 내용을 입력하세요">
+                </div>
+                <div class="grid-container" id="checklist-grid"></div>
+                <div class="text-center mt-6">
+                    <button onclick="resetChecklist()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold">모두 초기화</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [3. 모둠별 체크판 화면] -->
+        <div id="page-group" class="page-transition hidden">
+            <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-blue-100 mb-8">
+                <div class="flex flex-col sm:flex-row gap-4 items-center">
+                    <span class="font-bold text-blue-800 whitespace-nowrap">오늘의 과제:</span>
+                    <input type="text" id="group-task-name" placeholder="과제 내용을 입력하세요" class="w-full p-3 border-b-2 border-blue-200 outline-none focus:border-blue-500 text-lg">
+                    <button onclick="resetGroupAll()" class="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold whitespace-nowrap">모두 초기화</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="group-grid-container">
+                <!-- JS에서 생성됨 -->
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 페이지 전환 로직 ---
+        function showPage(pageId) {
+            // 모든 페이지 숨기기
+            document.querySelectorAll('.page-transition').forEach(page => page.classList.add('hidden'));
+            // 선택한 페이지 보이기
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            // 스크롤 맨 위로
+            window.scrollTo(0, 0);
+        }
+
+        // --- 1. 타이머 로직 ---
+        let totalSeconds = 1500, timeLeft = 1500, timerId = null, isRunning = false, alarmInterval = null;
+        const tDisplay = document.getElementById('timer-display'), tPath = document.getElementById('timer-path');
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function updateTimerVisual(percent) {
+            if (percent <= 0) { tPath.setAttribute('d', ''); return; }
+            if (percent >= 1) { tPath.setAttribute('d', 'M 50 50 L 50 2 A 48 48 0 1 1 49.99 2 Z'); return; }
+            const angle = percent * 360;
+            const radians = (angle - 90) * Math.PI / 180;
+            const x = 50 + 48 * Math.cos(radians), y = 50 + 48 * Math.sin(radians);
+            const largeArc = angle <= 180 ? 0 : 1;
+            tPath.setAttribute('d', `M 50 50 L 50 2 A 48 48 0 ${largeArc} 1 ${x} ${y} Z`);
+        }
+
+        function updateTimerDisplay() {
+            const min = Math.floor(timeLeft / 60), sec = timeLeft % 60;
+            tDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+            updateTimerVisual(timeLeft / (totalSeconds || 1));
+            const status = document.getElementById('timer-status');
+            if (timeLeft <= 10 && isRunning) { tDisplay.style.color = '#ef4444'; status.textContent = "곧 종료됩니다!"; }
+            else { tDisplay.style.color = ''; status.innerHTML = "&nbsp;"; }
+        }
+
+        function playMelody() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            const now = audioCtx.currentTime;
+            [392, 523, 659, 783].forEach((f, i) => {
+                const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + i * 0.12);
+                g.gain.setValueAtTime(0.05, now + i * 0.12);
+                g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.4);
+                osc.connect(g); g.connect(audioCtx.destination);
+                osc.start(now + i * 0.12); osc.stop(now + i * 0.12 + 0.5);
+            });
+        }
+
+        document.getElementById('timer-start').onclick = function() {
+            if (isRunning) { clearInterval(timerId); isRunning = false; this.textContent = '다시 시작'; }
+            else {
+                if (!timerId) {
+                    const m = parseInt(document.getElementById('input-min').value) || 0;
+                    const s = parseInt(document.getElementById('input-sec').value) || 0;
+                    totalSeconds = timeLeft = m * 60 + s;
+                }
+                if (timeLeft <= 0) return;
+                isRunning = true; this.textContent = '일시 정지';
+                timerId = setInterval(() => {
+                    timeLeft--; updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId); timerId = null; isRunning = false;
+                        document.querySelector('.timer-card').classList.add('alarm-active');
+                        document.getElementById('timer-alarm-stop').classList.remove('hidden');
+                        playMelody(); alarmInterval = setInterval(playMelody, 3000);
+                    }
+                }, 1000);
+            }
+        };
+
+        document.getElementById('timer-reset').onclick = function() {
+            clearInterval(timerId); timerId = null; isRunning = false;
+            const m = parseInt(document.getElementById('input-min').value) || 0;
+            const s = parseInt(document.getElementById('input-sec').value) || 0;
+            totalSeconds = timeLeft = m * 60 + s;
+            document.getElementById('timer-start').textContent = '시작하기';
+            updateTimerDisplay();
+        };
+
+        document.getElementById('timer-alarm-stop').onclick = function() {
+            clearInterval(alarmInterval);
+            this.classList.add('hidden');
+            document.querySelector('.timer-card').classList.remove('alarm-active');
+            document.getElementById('timer-reset').click();
+        };
+
+        // --- 2. 체크리스트 로직 ---
+        const students = ["강태영", "김재아", "김지아", "김지유", "김지한", "김채령", "남현우", "문유찬", "박지호", "서예림", "신현진", "여승우", "이루안", "이서아", "이예은", "이정우", "이채연", "임수현", "정아율", "제갈선율", "최서준", "최아윤", "한수아", "", ""];
+        
+        function initChecklist() {
+            const grid = document.getElementById('checklist-grid');
+            grid.innerHTML = '';
+            students.forEach((name, i) => {
+                const cell = document.createElement('div');
+                cell.className = 'student-cell';
+                cell.innerHTML = `<span class="text-xs text-slate-400 mb-1">${i+1}</span><span class="name-label font-bold text-sm">${name}</span>`;
+                if(name !== "") cell.onclick = () => cell.classList.toggle('checked');
+                grid.appendChild(cell);
+            });
+        }
+        function resetChecklist() { document.querySelectorAll('.student-cell').forEach(c => c.classList.remove('checked')); }
+
+        // --- 3. 모둠별 체크판 로직 ---
+        const groupData = [
+            { id: 1, name: "1모둠", color: "bg-g1", members: ["태영", "재아", "지아", "지유"] },
+            { id: 2, name: "2모둠", color: "bg-g2", members: ["지한", "채령", "현우", "유찬"] },
+            { id: 3, name: "3모둠", color: "bg-g3", members: ["지호", "예림", "현진", "승우"] },
+            { id: 4, name: "4모둠", color: "bg-g4", members: ["루안", "서아", "예은", ""] },
+            { id: 5, name: "5모둠", color: "bg-g5", members: ["정우", "채연", "수현", "아율"] },
+            { id: 6, name: "6모둠", color: "bg-g6", members: ["선율", "서준", "아윤", "수아"] }
+        ];
+
+        function initGroupBoard() {
+            const container = document.getElementById('group-grid-container');
+            container.innerHTML = '';
+            groupData.forEach(group => {
+                const card = document.createElement('div');
+                card.className = 'group-card';
+                let memberHtml = group.members.map(m => 
+                    m ? `<div class="group-student-btn ${group.color}" onclick="this.classList.toggle('completed')">${m}</div>` 
+                      : `<div class="h-[55px] ${group.color} opacity-30"></div>`
+                ).join('');
+                card.innerHTML = `<div class="group-header">${group.name}</div>${memberHtml}`;
+                container.appendChild(card);
+            });
+        }
+
+        function resetGroupAll() {
+            if(confirm('모든 모둠 체크를 초기화할까요?')) {
+                document.querySelectorAll('.group-student-btn').forEach(b => b.classList.remove('completed'));
+            }
+        }
+
+        // 초기화 실행
+        window.onload = () => {
+            initChecklist();
+            initGroupBoard();
+            updateTimerDisplay();
+        };
+    </script>
+</body>
+</html>
